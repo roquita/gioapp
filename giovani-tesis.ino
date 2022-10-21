@@ -115,7 +115,10 @@ void setup() {
 void loop() {
   read_sensors();
   send_data();
-  delay(30000);
+
+  // delay de 15 min
+  for (int i = 0; i < 15; i++)
+    delay(60000);//1min
 }
 
 // FUNCIONES AUXILIARES
