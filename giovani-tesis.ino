@@ -77,9 +77,9 @@ int s4 = 0;
 int s5 = 0;
 int s6 = 0;
 bool s7 = false;
-bool s8 = false;
-bool s9 = false;
-bool s10 = false;
+int s8 = 0;
+int s9 = 0;
+int s10 = 0;
 
 void setup() {
   delay(2000);
@@ -223,7 +223,7 @@ void read_sensors() {
   Serial.println(HumedadSuelo_steps);
   Serial.print("Acidez de suelo steps: ");
   Serial.println(AcidezSuelo_steps);
-  s1 = AcidezSuelo_steps;
+  s1 = (int)(AcidezSuelo_steps/200.0 + 3.0);
 
   s2 = (int)((-0.175438596) * HumedadSuelo_steps + 157.894736);
   s2 = (s2 >= 100) ? 100 : ( s2 >= 0 ? s2 : 0 );
@@ -234,7 +234,7 @@ void read_sensors() {
   int co_mv = averageAnalogRead(pinMQ7) * (3300.0 / 4095.0) * 1.73333;
   Serial.print(" CO concentracion RAW()mv: ");
   Serial.println(co_mv);
-  s3 = co_mv;
+  s3 = (int)(co_mv/10.0+20.0);
 
   // LECTURAS DE RADIACION ULTRAVIOLETA (GYML8511)
   int uvLevel = averageAnalogRead(UVOUT);
@@ -277,7 +277,8 @@ void read_sensors() {
   float distanceCm1 = duration1 * SOUND_SPEED / 2;
   Serial.print("Distance1 (cm): ");
   Serial.println(distanceCm1);
-  s8 = (distanceCm1 < 30.0) ? false : true;
+  distanceCm1 = distanceCm1 >= 100.0 ? 100.0 : distanceCm1;
+  s8 = (int)(100.0 - distanceCm1);
 
   // LECTURAS DE SENSOR DE LLENADO 2
   delay(100);
@@ -290,7 +291,8 @@ void read_sensors() {
   float distanceCm2 = duration2 * SOUND_SPEED / 2;
   Serial.print("Distance2 (cm): ");
   Serial.println(distanceCm2);
-  s9 = (distanceCm2 < 30.0) ? false : true;
+  distanceCm2 = distanceCm2 >= 100.0 ? 100.0 : distanceCm2;
+  s9 = (int)(100.0 - distanceCm2);
 
   // LECTURAS DE SENSOR DE LLENADO 3
   delay(100);
@@ -303,8 +305,8 @@ void read_sensors() {
   float distanceCm3 = duration3 * SOUND_SPEED / 2;
   Serial.print("Distance3 (cm): ");
   Serial.println(distanceCm3);
-  s10 = (distanceCm3 < 30.0) ? false : true;
-
+  distanceCm3 = distanceCm3 >= 100.0 ? 100.0 : distanceCm3;
+  s10 = (int)(100.0 - distanceCm3);
 }
 void send_data() {
   // EMPAQUETAR DATOS
@@ -319,16 +321,14 @@ void send_data() {
            "\"s5\":%i,"
            "\"s6\":%i,"
            "\"s7\":%s,"
-           "\"s8\":%s,"
-           "\"s9\":%s,"
-           "\"s10\":%s"
+           "\"s8\":%i,"
+           "\"s9\":%i,"
+           "\"s10\":%i"
            "}",
            s1, s2, s3,
            s4, s5, s6,
            s7 ? "true" : "false",
-           s8 ? "true" : "false",
-           s9 ? "true" : "false",
-           s10 ? "true" : "false");
+           s8 , s9 , s10 );
 
   Serial.println(datos);
 
