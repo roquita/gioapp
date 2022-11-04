@@ -19,7 +19,6 @@
   uv_ref gpio25 ADC2_8
   dht11 gpio27
   ldr gpio14
-
 */
 
 // CABECERAS PARA SX1276 LORAWAN CHIP
@@ -73,7 +72,7 @@ int pinAcidezSuelo = 34;
 int s1 = 0;
 int s2 = 0;
 int s3 = 0;
-int s4 = 0;
+float s4 = 0;
 int s5 = 0;
 int s6 = 0;
 bool s7 = false;
@@ -96,7 +95,7 @@ void setup() {
 
   // INICIALIZACION PARA GYML8511 (SENSOR DE RADIACION ULTRAVIOLETA)
   pinMode(UVOUT, INPUT);
-  pinMode(REF_3V3, INPUT);
+  pinMode(REF_3V3, INPUT);  
 
   // INICIALIZACION PARA MQ7 (SENSOR DE CONCENTRACION DE CO)
   pinMode(pinMQ7, INPUT);
@@ -166,7 +165,6 @@ extern "C" void lora_init()
 
   // Register callback for received messages
   ttn_on_message(messageReceived);
-
 }
 bool lora_join()
 {
@@ -223,7 +221,7 @@ void read_sensors() {
   Serial.println(HumedadSuelo_steps);
   Serial.print("Acidez de suelo steps: ");
   Serial.println(AcidezSuelo_steps);
-  s1 = (int)(AcidezSuelo_steps/200.0 + 3.0);
+  s1 = (int)(AcidezSuelo_steps / 200.0 + 3.0);
 
   s2 = (int)((-0.175438596) * HumedadSuelo_steps + 157.894736);
   s2 = (s2 >= 100) ? 100 : ( s2 >= 0 ? s2 : 0 );
@@ -234,16 +232,21 @@ void read_sensors() {
   int co_mv = averageAnalogRead(pinMQ7) * (3300.0 / 4095.0) * 1.73333;
   Serial.print(" CO concentracion RAW()mv: ");
   Serial.println(co_mv);
-  s3 = (int)(co_mv/10.0+20.0);
+  s3 = (int)(co_mv / 10.0 + 20.0);
 
   // LECTURAS DE RADIACION ULTRAVIOLETA (GYML8511)
   int uvLevel = averageAnalogRead(UVOUT);
-  int refLevel = averageAnalogRead(REF_3V3);
-  float outputVoltage = 3.3 / refLevel * uvLevel;
-  float uvIntensity = mapfloat(outputVoltage, 0.00, 2.9, 0.0, 15.0);//0.99, 2.9, 0.0, 15.0
+  int refLevel = 4095;
+  float outputVoltage = (3.3 / refLevel) * uvLevel;
+  float uvIntensity = mapfloat(outputVoltage, 0.90, 0.93, 0.0, 15.0);//0.99, 2.9, 0.0, 15.0
+  uvIntensity = uvIntensity < 0.0 ? 0.0 : uvIntensity;
+  Serial.print(" uvLevel: ");
+  Serial.println(uvLevel);
+  Serial.print(" outputVoltage: ");
+  Serial.println(outputVoltage);
   Serial.print(" UV Intensity (mW/cm^2): ");
   Serial.println(uvIntensity);
-  s4 = (int)uvIntensity;
+  s4 = uvIntensity;
 
   // LECTURAS DE TEMPERATURA Y HUMEDAD AMBIENTALES (DHT11)
   float humidity = dht.readHumidity();
@@ -317,7 +320,7 @@ void send_data() {
            "\"s1\":%i,"
            "\"s2\":%i,"
            "\"s3\":%i,"
-           "\"s4\":%i,"
+           "\"s4\":%.2f,"
            "\"s5\":%i,"
            "\"s6\":%i,"
            "\"s7\":%s,"

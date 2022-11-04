@@ -1,0 +1,1 @@
+arduino 1.8.19 -> esp32 2.0.0 board manager -> Esp32 dev board
